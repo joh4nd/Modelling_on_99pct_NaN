@@ -1,0 +1,100 @@
+{
+ "cells": [
+  {
+   "attachments": {},
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# opg_noter\n",
+    "## egen formuleringen af opgaven\n",
+    "- aflever i .txt  rum-tid positioner med usikkerhed i formatet `<time> <rebel> <x> <y> <z> <uncertainty>` for hver af nedenstående, og suppler med .py for modellen/algoritmen og evt. en fil med kommentarer/forklaringer:\n",
+    "    - rebel (ca 30)\n",
+    "    - tid (ca 1000)\n",
+    "    - hvor positioner er et sted i 1000 * 1000 * 1000\n",
+    "- rebeller rejser på unavngivne rumskibe med sine holdkammerater mellem stjerner og stjerneklustre. rebeller forlader ikke sit skib. rebeller udsender en af tre typer beskeder, som vi håber at bruge for at finde positionerne\n",
+    "    - NEA: næreste stjerne\n",
+    "    - COT: co-traveller\n",
+    "    - LOC: location\n",
+    "- bestræb nøjagtige og præcise svar, dvs. punkt estimater og err. \n",
+    "\n",
+    "## refleksioner\n",
+    "* For rebeller der ikke oplyser positionen, kan denne oplysning måske findes ved at se hvor deres rejsemakker befinder sig.\n",
+    "* Hvad fortæller næreste stjerne om lokationen?\n",
+    "* Hvis stjerner klumper sammen i clusters, hvad fortæller det så om rebellers missing position?\n",
+    "* Rebellernes rejser ikke er helt random, så kan vi estimere dem :)\n",
+    "* \n",
+    "    * [](https://en.wikipedia.org/wiki/Training,_validation,_and_test_data_sets)\n",
+    "\n",
+    "## baggrundsmateriale\n",
+    "1. start with `truth_plotter.ipynb` to get a feeling behind truth data by visualizing it.\n",
+    "2. `public_plotter.ipynb`: Parses the public rebel broadcasts and returns some dataframes you can use [I guess to create a model]. Also plots the location of the LOC ﬂavour of leaks for simple inspection as an example.\n",
+    "3. `grade_assignment.ipynb`: reads your solution, along with the truth file and provides a score. Very slow. If not using notebooks, you can also just call `grade_assignment()` directly in `rebel_decode.py`.\n",
+    "4. `rebel_decode.py`: The muscle power behind the notebooks. Feel free to extend or alter. \n",
+    "5. eventually change dataframes layouts \n",
+    "\n",
+    "## hjælpe spørgsmål / delopgaver (may help in constructing your scored assignment)\n",
+    "- How many ships are there in the graded assignment?\n",
+    "- List all passengers of each ship in the graded assignment\n",
+    "- What type of leaks are most common?\n",
+    "- Are public message leak rates independent of time/position?\n",
+    "    - If not, can you determine the analytical function that govern the rates?\n",
+    "- We said rebel movements are not completely random. Is this true?\n",
+    "\n",
+    "## noter\n",
+    "- opgavebeskrivelsen indeholder måske en fejl i linjen om `00??_public.txt` og `assignment_public.txt`\n",
+    "- public data synes at være træningsdata, imens truth/real data synes at være testdata\n",
+    "- opgaven kan givet vis laves i rebel decode\n",
+    "- `rebel_decode.py` indeholder grade_assignment, som kan være hurtigere og bedre\n",
+    "- `00??_truth.txt` indeholder \n",
+    "    - WORLD LOG med forskellige antal\n",
+    "        - systemer (fx 4158) som hver har\n",
+    "            - location (0-1000 x 0-1000 x 0-1000)\n",
+    "            - nNeigh værdier (fx 28, 14)\n",
+    "            - navn (fx StarID_00017)\n",
+    "        - skibe (fx 4), som har forskellige værdier\n",
+    "            - shipID_00000\n",
+    "            - værdie\n",
+    "            - starID_\n",
+    "            - lokationer\n",
+    "            - værdi\n",
+    "        - rebeller (fx 33), som har forskellige værdier\n",
+    "            - RevelID_00000\n",
+    "            - navn\n",
+    "            - besked\n",
+    "            - ship_ID_\n",
+    "    - EVENT LOG, der beskriver\n",
+    "        - bevægelse / besked\n",
+    "        - ShipID_\n",
+    "        - RebelID_ og navn (hvis besked)\n",
+    "- `00_??public.txt` indeholder\n",
+    "    - tid (0-1000)\n",
+    "    - besked-type\n",
+    "    - navn\n",
+    "    - besked-indhold (navn/lokation/starID_)\n",
+    "- `sample_answer.txt` indeholder 1000 * rebelnavne i format `<time> <rebel> <x> <y> <z> <uncertainty>`\n",
+    "- `assignment_public.txt` indeholder ~ `00??_public.txt`\n",
+    "- brug evt. `make_dummy_answer` som returnerer `sample_answer.txt` til at lave et svar\n",
+    "- `REBS` er ikke df, men dict med nested dicts. "
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "base",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "version": "3.8.8"
+  },
+  "orig_nbformat": 4,
+  "vscode": {
+   "interpreter": {
+    "hash": "2eff2d74f618fde222479b54118cc76f0f7af2cabe924adab209368f7b17212b"
+   }
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
