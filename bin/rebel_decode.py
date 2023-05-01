@@ -134,7 +134,7 @@ def parse_movement(line):
     return t, x, y, z, ship_id, at_dest
 
 
-def parse_public_data(path="../out/0001_public.txt"):
+def parse_public_data(path="../data/0001_public.txt"):
     logging.info(" ... Parsing public data!")
 
     p_log = open(path, 'r')
@@ -193,7 +193,7 @@ def parse_public_data(path="../out/0001_public.txt"):
     return info
 
 
-def parse_truth_data(path="../out/1_truth.txt"):
+def parse_truth_data(path="../data/1_truth.txt"):
     logging.info(" ... Parsing truth data!")
 
     f_log = open(path, 'r')
@@ -272,7 +272,7 @@ def parse_truth_data(path="../out/1_truth.txt"):
     return truth
 
 
-def make_dummy_answer(path_truth="../out/0001_truth.txt", path_out="../out/sample_answer.txt"):
+def make_dummy_answer(path_truth="../data/0001_truth.txt", path_out="../data/sample_answer.txt"):
     logging.info('Reading from %s' % path_truth)
     logging.info('Writing to %s' % path_out)
 
@@ -301,7 +301,7 @@ def make_dummy_answer(path_truth="../out/0001_truth.txt", path_out="../out/sampl
 
 
 # TODO: Make ... better ... and faster ...
-def grade_assignment(path_truth="../out/0001_truth.txt", path_answer="../out/sample_answer.txt"):
+def grade_assignment(path_truth="../data/0001_truth.txt", path_answer="../data/sample_answer.txt"):
     from scipy.stats import multivariate_normal
     import numpy as np
 

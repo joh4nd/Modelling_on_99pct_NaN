@@ -4,7 +4,7 @@ import pandas as pd
 import networkx as nx
 
 
-data_directory = "../out/"
+data_directory = "../data/"
 
 for i in range(1, 10):  # Replace 10 with the maximum number of files you expect to have
     file_number = str(i).zfill(4)  # Pad with zeros to get four digits
@@ -31,22 +31,22 @@ def preprocess(filenames):
 
     data = []
     for file_num in file_nums:
-        public_file = f'../out/{file_num:04}_public.txt'
-        truth_file = f'../out/{file_num:04}_truth.txt'
+        public_file = f'../data/{file_num:04}_public.txt'
+        truth_file = f'../data/{file_num:04}_truth.txt'
 
-    p_info = rd.parse_public_data(f"../out/{base_filename}_public.txt") # "0001_public.txt"
+    p_info = rd.parse_public_data(f"../data/{base_filename}_public.txt") # "0001_public.txt"
     REBS=p_info.get_rebs()
     COT=p_info.get_cot() # df 
     NEA=p_info.get_nea() # df
     LOC=p_info.get_loc() # df
     FLAVOUR_DICT=p_info.get_flavour_dict()
 
-    truth = rd.parse_truth_data(f"../out/{base_filename}_truth.txt") # "../out/0001_truth.txt"
+    truth = rd.parse_truth_data(f"../data/{base_filename}_truth.txt") # "../data/0001_truth.txt"
     star_coords = truth.get_stars()
     ship_movements = truth.get_moves()
     messages = truth.get_messages()
 
-    rebs_df = pd.read_csv(f"../out/{base_filename}_public.txt", # '../out/0001_public.txt'
+    rebs_df = pd.read_csv(f"../data/{base_filename}_public.txt", # '../data/0001_public.txt'
                     header=None, engine='python',
                     sep='t=(\d+), (\w+), (\w+), (.*)').dropna(how='all', axis=1) # regex from rebel_decode.py
     rebs_df.columns=['t', 'msg_type', 'messenger', 'msg_content']
