@@ -1,9 +1,9 @@
 # Content
 
-This repository contains data and bin code for a task called Rebel Rescue. The repo is organized into
+This repository contains my solution for a task called Rebel Rescue. The repo is organized into
 - bin
 - src
 - data
-- docs
+- docs (task.md in here)
 - results
 
