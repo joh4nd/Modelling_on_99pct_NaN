@@ -1,5 +1,6 @@
-__*__
+venv
 .ipynb_checkpoints
 '~$ter fra chatgpt.docx'
 .zip
-__pycache__/
+__pycache__
+*.py[cod]     #  .pyc, .pyo, and .pyd files.
