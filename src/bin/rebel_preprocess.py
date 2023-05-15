@@ -53,32 +53,6 @@ def preprocess(filenames):
     rebs_df.reset_index(drop=True)
 
 
-    # rebs_df = rebs_df[['t','messenger','msg_type']]
-    # rebs_df = rebs_df.set_index('t')\
-    #             .groupby('messenger')\
-    #             .apply(lambda df_x: df_x.reindex(range(1, 1000+1)))\
-    #             .drop('messenger', axis=1).reset_index()
-
-
-
-
-    # relations = nx.from_pandas_edgelist(COT, source='messenger', target='cotraveller')
-    # ships = {rebel: ship for ship, shipnumber in enumerate((nx.connected_components(relations))) for rebel in shipnumber}
-    # rebs_df['ship'] = rebs_df['messenger'].map(ships)
-    # # rebs_df['ship'].isna().sum() # yes
-    # # rebs_df.ship.nunique() # 4
-    # # pd.Series(ships)
-
-
-    # ship_movements['ship'] = ship_movements['id'].apply(lambda id_x: int(id_x.split('_')[1])) # split, tak the last item, to int
-    # ship_movements.rename({'x': 'x_truth', 'y': 'y_truth', 'z': 'z_truth'}, axis=1, inplace=True)
-    # ship_movements = ship_movements[['t','x_truth','y_truth','z_truth','ship']]
-
-    # rebs_df_wtruth = pd.merge(rebs_df,ship_movements, how='left',on=['t','ship'])
-    # rebs_df_wtruth
-
-
-
 
 
 

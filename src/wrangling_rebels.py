@@ -153,29 +153,30 @@ plan:
 a) add sample identifer
 b) make sure each ship has a unique ID
 """
-# load files and wrangle
-public_list = sorted(glob.glob("opg_RR/data/00??_public.txt")) # list files for rebel_decode
-public_dfs = []
-for sample_no, filename in enumerate(public_list, start=1): #for filename in public_list:
+# THIS MUST BE CHANGED due to edits in src/rebel_preprocesses.py
+# # load files and wrangle
+# public_list = sorted(glob.glob("opg_RR/data/00??_public.txt")) # list files for rebel_decode
+# public_dfs = []
+# for sample_no, filename in enumerate(public_list, start=1): #for filename in public_list:
 
-    print('sample number: ', sample_no)
-    # p_info = rd.parse_public_data("filename")
+#     print('sample number: ', sample_no)
+#     # p_info = rd.parse_public_data("filename")
 
-    rebs_df = pd.read_csv(filename,
-                    header=None, engine='python',
-                    sep='t=(\d+), (\w+), (\w+), (.*)').dropna(how='all', axis=1) # regex from rebel_decode.py
-    rebs_df.columns=['t', 'msg_type', 'messenger', 'msg_content']
-    rebs_df.reset_index(drop=True)
+#     rebs_df = pd.read_csv(filename,
+#                     header=None, engine='python',
+#                     sep='t=(\d+), (\w+), (\w+), (.*)').dropna(how='all', axis=1) # regex from rebel_decode.py
+#     rebs_df.columns=['t', 'msg_type', 'messenger', 'msg_content']
+#     rebs_df.reset_index(drop=True)
 
-    # make time-series for predicting observations at 1-1000 time points
-    rebs_df = rebs_df.set_index('t')\
-                .groupby('messenger')\
-                .apply(lambda df_x: df_x.reindex(range(1, 1000+1)))\
-                .drop('messenger', axis=1).reset_index()
+#     # make time-series for predicting observations at 1-1000 time points
+#     rebs_df = rebs_df.set_index('t')\
+#                 .groupby('messenger')\
+#                 .apply(lambda df_x: df_x.reindex(range(1, 1000+1)))\
+#                 .drop('messenger', axis=1).reset_index()
 
-    # add sample number and rebel ID
-    rebs_df['sample'] = '{:04d}'.format(sample_no) # '%04d' % sample_no
-    rebs_df['ID'] = rebs_df['messenger'] + '_{:04d}'.format(sample_no)
+#     # add sample number and unique rebel ID
+#     rebs_df['sample'] = '{:04d}'.format(sample_no) # '%04d' % sample_no
+#     rebs_df['ID'] = rebs_df['messenger'] + '_{:04d}'.format(sample_no)
     
     # estimate ships
     relations = nx.from_pandas_edgelist(COT, source='messenger', target='cotraveller')
