@@ -8,12 +8,13 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 class PublicInfo:
 
-    def __init__(self, rebs, cot, nea, loc, flavour_dict):
+    def __init__(self, rebs, cot, nea, loc, flavour_dict, rebs_df):
         self.rebs = rebs
         self.cot = cot
         self.nea = nea
         self.loc = loc
         self.flavour_dict = flavour_dict
+        self.rebs_df = rebs_df
 
     def get_rebs(self):
         return self.rebs
@@ -30,6 +31,9 @@ class PublicInfo:
     def get_flavour_dict(self):
         return self.flavour_dict
 
+    # Pandas dataframe of rebs, rather than dict
+    def get_rebel_df(self):
+        return self.rebs_df
 
 class TruthInfo:
 
@@ -134,9 +138,10 @@ def parse_movement(line):
     return t, x, y, z, ship_id, at_dest
 
 
-def parse_public_data(path="../data/0001_public.txt"):
+def parse_public_data(path="../out/0001_public.txt"):
     logging.info(" ... Parsing public data!")
-
+    print('"path" of file: ', str(path))
+    
     p_log = open(path, 'r')
 
     # Dictionary for all rebel names in public log, and their message types
@@ -176,24 +181,55 @@ def parse_public_data(path="../data/0001_public.txt"):
 
     # Do some probably overcomplicated crap to get per rebel DF
     mapper = {"COT": df_cot, "NEA": df_nea, "LOC": df_loc}
-    df_rebs = {}
+    dict_rebs = {}
     for rebelName in rebels:
         logging.debug(rebelName)
-        df_rebs[rebelName] = mapper[rebels[rebelName]].loc[(mapper[rebels[rebelName]]['messenger'] == rebelName)]
+        dict_rebs[rebelName] = mapper[rebels[rebelName]].loc[(mapper[rebels[rebelName]]['messenger'] == rebelName)]
 
-    if len(rebels) != len(df_rebs):
+    if len(rebels) != len(dict_rebs):
         logging.fatal('I made a bug >:(')
         exit(-1)
 
-    logging.info(" ... Done parsing public!")
-    logging.debug('Found %d rebels!' % len(df_rebs))
+    # simpler way to return rebel pandas dataframe
+    print('start creating rebels_df')
+    rebs_df = pd.read_csv(path, # '../data/0001_public.txt'
+                    header=None, engine='python',
+                    sep='t=(\d+), (\w+), (\w+), (.*)').dropna(how='all', axis=1) # stolen from above, alternative: r"t=(\d+),\s*([^,]+),\s*([^,]+),\s*(.+)"
+    rebs_df.columns=['t', 'msg_type', 'messenger', 'msg_content']
+    rebs_df.reset_index(drop=True)
+    print('first step is done')
 
-    info = PublicInfo(df_rebs, df_cot, df_nea, df_loc, rebels)
+    ## make time-series for predicting observations at 1-1000 time points
+    print('start expand to 1000 timeseries')
+    rebs_df = rebs_df.set_index('t')\
+                .groupby('messenger')\
+                .apply(lambda df_x: df_x.reindex(range(1, 1000+1)))\
+                .drop('messenger', axis=1).reset_index()
+
+    print('timeseries done')
+    print(rebs_df)
+
+    ## add sample number and unique rebel ID
+    print('match regex on path to extract four digit sample no. integer')
+    match = re.search(r"/(\d{4})[^/]*\.txt$", path)
+    print('match content: ', match.group(1))
+    sample_no = int(match.group(1))
+    print('sample is :', sample_no)
+    print('sample as four digit: {:04d}'.format(sample_no))
+    rebs_df['sample'] = '{:04d}'.format(sample_no) # '%04d' % sample_no
+    print('df series: ', rebs_df['sample'])
+    rebs_df['ID'] = rebs_df['messenger'] + '_{:04d}'.format(sample_no) # unique across samples
+    print(rebs_df['ID'])
+
+    logging.info(" ... Done parsing public!")
+    logging.debug('Found %d rebels!' % len(dict_rebs))
+
+    info = PublicInfo(dict_rebs, df_cot, df_nea, df_loc, rebels, rebs_df)
 
     return info
 
 
-def parse_truth_data(path="../data/1_truth.txt"):
+def parse_truth_data(path="../out/1_truth.txt"):
     logging.info(" ... Parsing truth data!")
 
     f_log = open(path, 'r')
@@ -272,7 +308,7 @@ def parse_truth_data(path="../data/1_truth.txt"):
     return truth
 
 
-def make_dummy_answer(path_truth="../data/0001_truth.txt", path_out="../data/sample_answer.txt"):
+def make_dummy_answer(path_truth="../out/0001_truth.txt", path_out="../out/sample_answer.txt"):
     logging.info('Reading from %s' % path_truth)
     logging.info('Writing to %s' % path_out)
 
@@ -301,7 +337,7 @@ def make_dummy_answer(path_truth="../data/0001_truth.txt", path_out="../data/sam
 
 
 # TODO: Make ... better ... and faster ...
-def grade_assignment(path_truth="../data/0001_truth.txt", path_answer="../data/sample_answer.txt"):
+def grade_assignment(path_truth="../out/0001_truth.txt", path_answer="../out/sample_answer.txt"):
     from scipy.stats import multivariate_normal
     import numpy as np
 

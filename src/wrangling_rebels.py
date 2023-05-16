@@ -30,20 +30,22 @@ os.chdir('path')
 ######### inspect one sample #########
 ######################################
 
-p_info = rd.parse_public_data("opg_RR/data/0001_public.txt")
+p_info = rd.parse_public_data("../data/0001_public.txt")
 COT=p_info.get_cot() # df of messenger's cotraveller at t
 NEA=p_info.get_nea() # df of messenger's closest star
 LOC=p_info.get_loc() # df of messenger's location
 FLAVOUR_DICT=p_info.get_flavour_dict() # dict of messenger's flavour/msg_type
 REBS=p_info.get_rebs() # semi-dict of messenger's co-travellers
-
-rebs_df = pd.read_csv('opg_RR/data/0001_public.txt',
-                 header=None, engine='python',
-                 sep='t=(\d+), (\w+), (\w+), (.*)')\
-                    .dropna(how='all', axis=1) # regex from rebel_decode.py
-rebs_df.columns=['t', 'msg_type', 'messenger', 'msg_content'] # replace index,1,2,3,4
-rebs_df.reset_index(drop=True)
-rebs_df = rebs_df[['t','messenger','msg_type']] # drop msg_content
+REBS
+rebs_df=p_info.get_rebs_df()
+rebs_df
+# rebs_df = pd.read_csv('opg_RR/data/0001_public.txt',
+#                  header=None, engine='python',
+#                  sep='t=(\d+), (\w+), (\w+), (.*)')\
+#                     .dropna(how='all', axis=1) # regex from rebel_decode.py
+# rebs_df.columns=['t', 'msg_type', 'messenger', 'msg_content'] # replace index,1,2,3,4
+# rebs_df.reset_index(drop=True)
+# rebs_df = rebs_df[['t','messenger','msg_type']] # drop msg_content
 
 
 
