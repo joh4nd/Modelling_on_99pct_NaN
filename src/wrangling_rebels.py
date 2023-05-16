@@ -37,7 +37,7 @@ LOC=p_info.get_loc() # df of messenger's location
 FLAVOUR_DICT=p_info.get_flavour_dict() # dict of messenger's flavour/msg_type
 REBS=p_info.get_rebs() # semi-dict of messenger's co-travellers
 rebs_df=p_info.get_rebs_df() # added method to exract df
-
+rebs_df
 
 """ plan
 1. use co-traveller info to determine shipmembers and ship identities
@@ -47,10 +47,10 @@ rebs_df=p_info.get_rebs_df() # added method to exract df
 
 
 3. concatenate the 10 sample dfs
-4. either
+4. to do:
     (a) i. join with truth data
-        ii. and carry out multiple imputation impute
-    (b) or, remove missing values
+        ii. carry out multiple imputation
+    (b) eventually remove missing values
 
 ?. inspect data
 
