@@ -17,7 +17,6 @@ LOC=p_info.get_loc() # df of messenger's location
 FLAVOUR_DICT=p_info.get_flavour_dict() # dict of messenger's flavour/msg_type
 REBS=p_info.get_rebs() # semi-dict of messenger's co-travellers
 rebs_df=p_info.get_rebs_df() # added method to exract df
-rebs_df
 
 """ plan
 1. use co-traveller info to determine shipmembers and ship identities
@@ -116,31 +115,22 @@ print(rebs_df.groupby(['msg_type'])['messenger'].nunique())
 """ 3. concatenation
 
 plan: 
-a) use sample identifer from the df I added to rebel_decode to ensure each ship has a unique ID
+a) loop over files to extract, now from rebel_decode, df's and concatenate
+b) use sample identifer from df I added to rebel_decode to ensure each ship has a unique ID
 
 """
-# THIS MUST BE CHANGED due to edits in src/rebel_decode.py
-# load files and wrangle
-# public_list = sorted(glob.glob("../data/00??_public.txt")) # list files for rebel_decode
-# public_dfs = []
-# for sample_no, filename in enumerate(public_list, start=1): #for filename in public_list:
+public_list = sorted(glob.glob("../data/00??_public.txt")) # list files for rebel_decode
+public_dfs = [] # list of df's for concatenation at loop end
 
-#     print('sample number: ', sample_no)
-#     # p_info = rd.parse_public_data("filename")
+for sample_no, filename in enumerate(public_list, start=1):
 
-#     rebs_df = pd.read_csv(filename,
-#                     header=None, engine='python',
-#                     sep='t=(\d+), (\w+), (\w+), (.*)').dropna(how='all', axis=1) # regex from rebel_decode.py
-
+    print('sample number: {sample_no}\n\n file path {filename}'.format(sample_no,filename))
+    p_info = rd.parse_public_data("filename")
+    rebs_df=p_info.get_rebs_df()
 
     # make ships unique across samples
     rebs_df['ship_sample'] = rebs_df.apply(lambda df_x: pd.isna if pd.isna(df_x['ship']) else df_x['sample']+'_'+str(df_x['ship']),axis=1)
 
-
-    #     # add sample number and unique rebel ID
-    #     rebs_df['sample'] = '{:04d}'.format(sample_no) # '%04d' % sample_no
-    #     rebs_df['ID'] = rebs_df['messenger'] + '_{:04d}'.format(sample_no)
-    
     # estimate ships
     relations = nx.from_pandas_edgelist(COT, source='messenger', target='cotraveller')
     ships = {rebel: shipnumber for shipnumber, ship in enumerate(nx.connected_components(relations), start=1) for rebel in ship}
