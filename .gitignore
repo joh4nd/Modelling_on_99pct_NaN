@@ -3,4 +3,5 @@ venv
 '~$ter fra chatgpt.docx'
 .zip
 __pycache__
-*.py[cod]     #  .pyc, .pyo, and .pyd files.
+*.py[cod]     #  .pyc, .pyo, and .pyd files
+rebel_decode_old.py

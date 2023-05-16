@@ -35,3 +35,28 @@ $ nano requirements.txt # add new lines for new packages
 # pip install pipreqs
 # pipreqs ~/repos/opg_RR/src/
 ```
+
+
+### details
+
+in the terminal, activate the virtual environment
+```bash
+$ source opg_RR/bin/venv/bin/activate
+```
+
+"""load tools in rebel_decode.py
+ - __init__.py in src/bin/
+ - configure vscode paths for directory ctrl+, 
+   - "jupyter: notebook file root" e.g. ${fileDirname}
+   - "Python › Analysis: Import Format"
+   - "Python › Terminal: Execute In File Dir"
+   - launch.json # https://stackoverflow.com/a/55072246/3755989
+ - cwd is set to find # https://stackoverflow.com/a/51149057/3755989
+
+from pathlib import Path
+print(Path.cwd())
+
+os.listdir(os.getcwd())
+os.getcwd()
+os.chdir('path')
+"""
