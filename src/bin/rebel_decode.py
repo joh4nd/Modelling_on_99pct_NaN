@@ -32,8 +32,8 @@ class PublicInfo:
         return self.flavour_dict
 
     # Pandas dataframe of rebs, rather than dict
-    def get_rebel_df(self):
-        return self.rebs_df
+    def get_rebs_df(self):
+        return self.rebs_df 
 
 class TruthInfo:
 
@@ -140,7 +140,6 @@ def parse_movement(line):
 
 def parse_public_data(path="../out/0001_public.txt"):
     logging.info(" ... Parsing public data!")
-    print('"path" of file: ', str(path))
     
     p_log = open(path, 'r')
 
@@ -191,40 +190,29 @@ def parse_public_data(path="../out/0001_public.txt"):
         exit(-1)
 
     # simpler way to return rebel pandas dataframe
-    print('start creating rebels_df')
     rebs_df = pd.read_csv(path, # '../data/0001_public.txt'
                     header=None, engine='python',
                     sep='t=(\d+), (\w+), (\w+), (.*)').dropna(how='all', axis=1) # stolen from above, alternative: r"t=(\d+),\s*([^,]+),\s*([^,]+),\s*(.+)"
     rebs_df.columns=['t', 'msg_type', 'messenger', 'msg_content']
     rebs_df.reset_index(drop=True)
-    print('first step is done')
 
     ## make time-series for predicting observations at 1-1000 time points
-    print('start expand to 1000 timeseries')
     rebs_df = rebs_df.set_index('t')\
                 .groupby('messenger')\
                 .apply(lambda df_x: df_x.reindex(range(1, 1000+1)))\
                 .drop('messenger', axis=1).reset_index()
 
-    print('timeseries done')
-    print(rebs_df)
-
     ## add sample number and unique rebel ID
-    print('match regex on path to extract four digit sample no. integer')
     match = re.search(r"/(\d{4})[^/]*\.txt$", path)
-    print('match content: ', match.group(1))
     sample_no = int(match.group(1))
-    print('sample is :', sample_no)
-    print('sample as four digit: {:04d}'.format(sample_no))
-    rebs_df['sample'] = '{:04d}'.format(sample_no) # '%04d' % sample_no
-    print('df series: ', rebs_df['sample'])
+    rebs_df['sample'] = '{:04d}'.format(sample_no)
     rebs_df['ID'] = rebs_df['messenger'] + '_{:04d}'.format(sample_no) # unique across samples
-    print(rebs_df['ID'])
+
 
     logging.info(" ... Done parsing public!")
     logging.debug('Found %d rebels!' % len(dict_rebs))
 
-    info = PublicInfo(dict_rebs, df_cot, df_nea, df_loc, rebels, rebs_df)
+    info = PublicInfo(dict_rebs, df_cot, df_nea, df_loc, rebels, rebs_df) # rebels contains dict_rebs?
 
     return info
 
