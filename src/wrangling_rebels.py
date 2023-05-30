@@ -42,13 +42,6 @@ for sample_no, filename in enumerate(public_list, start=1):
     ## make ships unique across samples to imply/convey no cross-sample information
     rebs_df['ship_sample'] = rebs_df.apply(lambda df_x: pd.isna if pd.isna(df_x['ship']) else str(df_x['ship'])+'_'+str(df_x['sample']),axis=1)
 
-    # # inspect
-    # print('Print df info: \n')
-    # print(rebs_df.info())
-    # print('\n What type of leaks are most common? (are they?)')
-    # print(rebs_df.value_counts('msg_type'), '\n')
-    # print('Frequency by type: \n', rebs_df.groupby(['msg_type'])['messenger'].nunique())
-
     public_dfs.append(rebs_df)
 
 public_dfs = pd.concat(public_dfs)
@@ -68,12 +61,14 @@ print('\n msgtype distribution \n'), print(public_dfs.groupby('sample')[['msg_ty
 
 ## number of messengers with respect to message type
 print('###### Messager frequencies: ######\n')
+print('\n joint number of messengers \n'), print(public_dfs['messenger'].nunique())
+print('\n number of messengers per sample \n'), print(public_dfs.groupby('sample')['messenger'].nunique())
 print('\n number of messengers per msgtype \n'), print(public_dfs.groupby(['msg_type'])['messenger'].nunique())
-print(public_dfs.groupby(['sample','msg_type'])[['messenger']].nunique().reset_index().describe()) # .reset_index().sort_values(by='messenger', ascending=False)
-
-## avg. no. of messengers per type
-print(public_dfs.groupby(['sample','msg_type'])[['messenger']].nunique().reset_index().groupby('msg_type')['messenger'].mean())
-
+print('\n number of messengers per msgtype distribution over sample \n'), print(public_dfs.groupby(['sample','msg_type'])[['messenger']].nunique().reset_index().pivot(index='sample',columns='msg_type',values='messenger'))
+print('\n messenger distribution across sample and msg_type \n'), print(public_dfs.groupby(['sample','msg_type'])[['messenger']].nunique().reset_index().describe())
+print('\n messenger distribution by sample and msg_type \n'), print(public_dfs.groupby(['sample','msg_type'])[['messenger']].nunique().reset_index().pivot(index='sample',columns='msg_type',values='messenger').describe())
+print('\n mean messengers pr type across samples \n'), print(public_dfs.groupby(['sample','msg_type'])[['messenger']].nunique().reset_index().groupby('msg_type')['messenger'].mean())
+print(' #################################################### \n We infer from the numbers that (1) messengers reappear in samples,\n and (2) that messengers change msg_type across samples. \n But do the names refer to substantially identical messengers? \n Or to the names in different samples just happen to be the same? \n ####################################################')
 
 ##############################################
 ######## when xyz are concatenated ###########
