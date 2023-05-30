@@ -1,17 +1,3 @@
----
-jupyter:
-  jupytext:
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.14.5
-  kernelspec:
-    display_name: base
-    language: python
-    name: python3
----
-
 # opg_noter
 ## egen formuleringen af opgaven
 - aflever i .txt  rum-tid positioner med usikkerhed i formatet `<time> <rebel> <x> <y> <z> <uncertainty>` for hver af nedenstående, og suppler med .py for modellen/algoritmen og evt. en fil med kommentarer/forklaringer:
@@ -28,7 +14,7 @@ jupyter:
 * For rebeller der ikke oplyser positionen, kan denne oplysning måske findes ved at se hvor deres rejsemakker befinder sig.
 * Hvad fortæller næreste stjerne om lokationen?
 * Hvis stjerner klumper sammen i clusters, hvad fortæller det så om rebellers missing position?
-* Rebellernes rejser ikke er helt random, så kan vi estimere dem :)
+* Rebellernes rejser ikke er helt random, så kan vi estimere dem :-D
 * 
     * [](https://en.wikipedia.org/wiki/Training,_validation,_and_test_data_sets)
 

@@ -44,7 +44,7 @@ in the terminal, activate the virtual environment
 $ source opg_RR/bin/venv/bin/activate
 ```
 
-"""load tools in rebel_decode.py
+load tools in rebel_decode.py
  - __init__.py in src/bin/
  - configure vscode paths for directory ctrl+, 
    - "jupyter: notebook file root" e.g. ${fileDirname}
@@ -52,11 +52,11 @@ $ source opg_RR/bin/venv/bin/activate
    - "Python › Terminal: Execute In File Dir"
    - launch.json # https://stackoverflow.com/a/55072246/3755989
  - cwd is set to find # https://stackoverflow.com/a/51149057/3755989
-
+```python
 from pathlib import Path
 print(Path.cwd())
 
 os.listdir(os.getcwd())
 os.getcwd()
 os.chdir('path')
-"""
+```
