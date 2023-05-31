@@ -34,7 +34,15 @@ rebs_df=p_info.get_rebs_df() # added method to exract df
 
 ?. inspect data
 
+    # # inspect 
+    # print('Print df info: \n')
+    # print(rebs_df.info())
+    # print('\n What type of leaks are most common? (are they?)')
+    # print(rebs_df.value_counts('msg_type'), '\n')
+    # print('Frequency by type: \n', rebs_df.groupby(['msg_type'])['messenger'].nunique())
+
 """
+
 
 
 """Inspect each sample
@@ -94,6 +102,7 @@ NEA['ship'] = NEA['messenger'].map(ships)
 rebs_df = pd.merge(rebs_df,NEA[['t','ship','closestStar']]
                    ,how='left',on=['ship','t'])\
                    .drop_duplicates(subset=['t','messenger','ship','closestStar',])
+
 rebs_df = pd.merge(rebs_df,LOC[['messenger','t','x','y','z']], how='left',on=['messenger','t']) # consider averaging leaked loc etc.
 LOC['ship'] = LOC['messenger'].map(ships)
 rebs_df = pd.merge(rebs_df,LOC[['t','ship','x','y','z']]
@@ -104,6 +113,4 @@ rebs_df = pd.merge(rebs_df,LOC[['t','ship','x','y','z']]
 print(rebs_df.info())
 print(rebs_df.value_counts('msg_type'))
 print(rebs_df.groupby(['msg_type'])['messenger'].nunique())
-
-
 
