@@ -85,7 +85,27 @@ for sample_no in sample_set:
 
     rebs_df.drop(rebs_df.filter(regex='^.*(_x|_y)').columns, axis=1, inplace=True)
 
+
     # get TRUTH to prepare multiple imputation
+
+    ## messages (LOC,NEA,COT leaks in one df)
+    messages = truth.get_messages()
+    rebel_id = messages[['id','name','shipid']].drop_duplicates(subset=['id','name','shipid']).sort_values(by='name')
+    rebs_df = rebs_df.merge(rebel_id, how='left', left_on='messenger', right_on='name').drop(labels='name', axis=1)
+
+    if rebs_df['shipid'].isna().sum() > 0:
+        print('\nrebels lacking shipid: {}\n'.format(rebs_df['shipid'].isna().sum()))
+
+    ## ship movements
+    ship_movements = truth.get_moves()
+    ship_movements.columns=['t', 'x_truth', 'y_truth', 'z_truth','shipid','at_dest']
+    rebs_df = rebs_df.merge(ship_movements, how='left', on=['t','shipid'], suffixes=('', '_y'))
+    rebs_df.drop(rebs_df.filter(regex='^.*(_y)').columns, axis=1, inplace=True)
+
+    ## star coordinates
+    star_coords = truth.get_stars()
+    star_coords.columns=['x_star', 'y_star', 'z_star', 'nNeigh','starid']
+    rebs_df = rebs_df.merge(star_coords, how='left', left_on='closestStar', right_on='starid').drop(labels='starid', axis=1)
 
     dfs.append(rebs_df)
 
