@@ -1,4 +1,4 @@
-# wrangling rebels
+# wrangling rebels version 2: use truth data earlier
 
 import glob 
 import re
@@ -43,49 +43,10 @@ for sample_no in sample_set:
     print("\n How many rebels' ships do we fail to identify?\n", int(rebs_df['ship'].isna().sum()/1000)) # t=1000
     rebs_df['ship_sample'] = rebs_df.apply(lambda df_x: np.nan if pd.isna(df_x['ship']) else str(df_x['ship'])+'_'+str(df_x['sample']),axis=1) # make ships unique across samples to imply/convey no cross-sample information
 
-        
-    # get NEA of leaker and impute to ship members
-    NEA=p_info.get_nea() # df of messenger's closest star
-    NEA['ship'] = NEA['messenger'].map(ships)
-
-    if NEA['ship'].isna().sum() < 1:
-        rebs_df = pd.merge(rebs_df,NEA[['t','ship','closestStar']], how='left', on=['ship','t'], suffixes=('', '__y'))
-
-        if rebs_df.duplicated().astype(int).sum() > 0:
-            print('Duplicates after join NEA: '), print(rebs_df.duplicated().astype(int).sum())
-
-            rebs_df.drop_duplicates(inplace=True)
-
-    else:
-        print('\n\nNEA leakers with unidentified ships: {}\n'.format(NEA['ship'].isna().sum()))
-
-        rebs_df = pd.merge(rebs_df,NEA[['messenger','t','closestStar']], how='left',on=['messenger','t'], suffixes=('', '__y'))
-
-        print('\nclosest stars first time: {}'.format(rebs_df['closestStar'].notna().sum()))
-
-        NEA2 = NEA.loc[NEA['ship'].notna()]
-        
-        if NEA2[['ship','t','closestStar']].duplicated().sum() > 0:
-            
-            print('\nshipmembers duplicate NEA leaks: {}'.format(NEA2[['ship','t','closestStar']].duplicated().sum()))
-            NEA2 = NEA2[['ship','t','closestStar']].drop_duplicates().sort_values(by=['ship','t'])
-
-        rebs_df = rebs_df.combine_first(rebs_df.drop('closestStar',axis=1).merge(NEA2, how='left',on=['ship','t']))
-        
-        print('closest stars second time: {}\n'.format(rebs_df['closestStar'].notna().sum()))
-
-
-    # get LOC of leaker and impute to ship members
-    LOC=p_info.get_loc() # df of messenger's location
-    rebs_df = pd.merge(rebs_df,LOC[['t','messenger','x','y','z']], how='left',on=['messenger','t'], suffixes=('', '__y'))
+    ###########################################
+    ########### wrangling_rebels_v2 ###########
+    ###########################################
     
-    # removed attempts to manually impute LOC to shipmembers
-    # because members at t leaked slightly different positions
-    # and there is no accurate way to decide what to impute
-
-    rebs_df.drop(rebs_df.filter(regex='^.*(__x|__y)').columns, axis=1, inplace=True)
-
-
     # get TRUTH to prepare multiple imputation
 
     ## messages (LOC,NEA,COT leaks in one df)
@@ -103,10 +64,53 @@ for sample_no in sample_set:
     rebs_df = rebs_df.merge(ship_movements, how='left', on=['t','shipid'], suffixes=('', '__y'))
     rebs_df.drop(rebs_df.filter(regex='^.*(__y)').columns, axis=1, inplace=True)
 
+
+    # get NEA of leaker and impute to ship members USING TRUTH ID
+    NEA=p_info.get_nea() # df of messenger's closest star
+    NEA = NEA.merge(rebel_id, how='left', left_on='messenger', right_on='name').drop(labels=['id','name'], axis=1)
+
+    if NEA['shipid'].isna().sum() < 1:
+        rebs_df = pd.merge(rebs_df,NEA[['t','shipid','closestStar']], how='left', on=['shipid','t'], suffixes=('', '__y'))
+
+        if rebs_df.duplicated().astype(int).sum() > 0:
+            print('Duplicates after join NEA: '), print(rebs_df.duplicated().astype(int).sum())
+
+            rebs_df.drop_duplicates(inplace=True)
+
+    else:
+        print('\n\nNEA leakers with unidentified ships: {}\n'.format(NEA['shipid'].isna().sum()))
+
+        rebs_df = pd.merge(rebs_df,NEA[['messenger','t','closestStar']], how='left',on=['messenger','t'], suffixes=('', '__y'))
+
+        print('\nclosest stars first time: {}'.format(rebs_df['closestStar'].notna().sum()))
+
+        NEA2 = NEA.loc[NEA['shipid'].notna()]
+        
+        if NEA2[['shipid','t','closestStar']].duplicated().sum() > 0:
+            
+            print('\nshipmembers duplicate NEA leaks: {}'.format(NEA2[['shipid','t','closestStar']].duplicated().sum()))
+            NEA2 = NEA2[['shipid','t','closestStar']].drop_duplicates().sort_values(by=['shipid','t'])
+
+        rebs_df = rebs_df.combine_first(rebs_df.drop('closestStar',axis=1).merge(NEA2, how='left',on=['shipid','t']))
+        
+        print('closest stars second time: {}\n'.format(rebs_df['closestStar'].notna().sum()))
+
+    # get TRUTH - continued
     ## star coordinates
     star_coords = truth.get_stars()
     star_coords.columns=['closestStar_x', 'closestStar_y', 'closestStar_z', 'closestStar_nNeigh','starid']
     rebs_df = rebs_df.merge(star_coords, how='left', left_on='closestStar', right_on='starid').drop(labels='starid', axis=1)
+
+    # get LOC of leaker and impute to ship members
+    LOC=p_info.get_loc() # df of messenger's location
+    rebs_df = pd.merge(rebs_df,LOC[['t','messenger','x','y','z']], how='left',on=['messenger','t'], suffixes=('', '__y'))
+    
+    # removed attempts to manually impute LOC to shipmembers
+    # because members at t leaked slightly different positions
+    # and there is no accurate way to decide what to impute
+
+    rebs_df.drop(rebs_df.filter(regex='^.*(__x|__y)').columns, axis=1, inplace=True)
+
 
     # last touch on df cols
     rebs_df.drop(labels='msg_content', axis=1, inplace=True) # OBS ship_missing?
