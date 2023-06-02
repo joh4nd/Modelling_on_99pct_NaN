@@ -99,17 +99,23 @@ for sample_no in sample_set:
     ## ship movements
     ship_movements = truth.get_moves()
     ship_movements.columns=['t', 'x_truth', 'y_truth', 'z_truth','shipid','at_dest']
+    ship_movements['at_dest'] = ship_movements['at_dest'].map({'true': True, 'false': False})
     rebs_df = rebs_df.merge(ship_movements, how='left', on=['t','shipid'], suffixes=('', '_y'))
     rebs_df.drop(rebs_df.filter(regex='^.*(_y)').columns, axis=1, inplace=True)
 
     ## star coordinates
     star_coords = truth.get_stars()
-    star_coords.columns=['x_star', 'y_star', 'z_star', 'nNeigh','starid']
+    star_coords.columns=['closestStar_x', 'closestStar_y', 'closestStar_z', 'closestStar_nNeigh','starid']
     rebs_df = rebs_df.merge(star_coords, how='left', left_on='closestStar', right_on='starid').drop(labels='starid', axis=1)
 
+    # last touch on df cols
+    rebs_df.drop(labels='msg_content', axis=1, inplace=True) # OBS ship_missing?
+    rebs_df.rename(columns={'ID': 'messengerId', 'sample': 'sampleNo', 'ship': 'shipNo', 'ship_sample': 'shipId','closestStar':'closestStarId','id': 'messengerId_truth', 'shipid': 'shipId_truth','at_dest':'at_dest/moving'},inplace=True)
+    rebs_df = rebs_df[['sampleNo','messengerId','messengerId_truth','shipId','shipId_truth','messenger','t','msg_type','closestStarId','closestStar_x','closestStar_y','closestStar_z','closestStar_nNeigh','x','y','z','x_truth','y_truth','z_truth','at_dest/moving']]
+    
     dfs.append(rebs_df)
 
-dfs = pd.concat(dfs)
+dfs = pd.concat(dfs).reset_index().drop('index', axis=1)
 dfs
 
 #region: inspect and compare samples

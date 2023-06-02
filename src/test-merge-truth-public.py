@@ -93,7 +93,7 @@ else:
 
     # I am not sure averaging LOC leaks across ship members (or something like that) will increase model estimation accuracy 
     ################################################################
-    
+
     if LOC2[['ship','t','x']].duplicated(subset=['ship','t']).sum() > 0:
         
         print('\nshipmembers duplicate LOC leaks: {}'.format(LOC2[['ship','t','x']].duplicated().sum()))
@@ -171,8 +171,9 @@ star_coords.columns=['x_star', 'y_star', 'z_star', 'nNeigh','starid']
 
 1. get (a) star positions of leaked nearest stars and (b) nNeigh, by joining on star_id
 
-- (redundant?) perhaps use information about predicted positions to predict the positions of stars
-that, via information about the ship, can in turn be used to predict more positions
+2. perhaps use knowledge of true star positions of all stars 
+
+- (redundant?) perhaps use information about predicted positions to predict the positions of stars that, via information about the ship, can in turn be used to predict more positions
 
 """
 rebs_df = rebs_df.merge(star_coords, how='left', left_on='closestStar', right_on='starid').drop(labels='starid', axis=1)
