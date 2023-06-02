@@ -1,7 +1,6 @@
-# wrangling rebels version 2
-# uses truth data shipId earlier
-# results in more 33321 < 30192 non-null values for closestStar
-# ideal for training the model
+# inspect leak rates
+# What type of leaks are most common?
+# Are public message leak rates independent of time/position?
 
 import glob 
 import re
@@ -9,19 +8,6 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 import bin.rebel_decode as rd
-
-
-######################################
-#########   all 10 samples   #########
-######################################
-
-""" 3. concatenation
-
-plan: 
-a) loop over files to extract, now from rebel_decode, df's and concatenate
-b) use sample identifer from df I added to rebel_decode to ensure each ship has a unique ID
-
-"""
 
 files = glob.glob("../data/*.txt") # list all files, some for rebel_decode
 sample_set = sorted({re.search(r"(\d{2})_", filetype).group(1).zfill(4) for filetype in files if re.search(r"(\d{2})_", filetype)}) # make time-series iterator
@@ -123,7 +109,6 @@ for sample_no in sample_set:
     dfs.append(rebs_df)
 
 dfs = pd.concat(dfs).reset_index().drop('index', axis=1)
-dfs.info()
 
 #region: inspect and compare samples
 print('###### df info: ######\n'), print(dfs.info())
@@ -185,3 +170,18 @@ units across samples (e.g. John in sample 1 is John in sample 2).
 # print('\n ## If not, can you determine the analytical function that govern the rates? ## \n')
 
 
+# missing_rate_by_time = df[df['A'].isnull()].groupby('time').size() / df.groupby('time').size()
+# # missing_rate_by_time = data.groupby('time')['A'].apply(lambda x: x.isnull().mean())
+# missing_rate_stats = missing_rate_by_time.describe()
+# print(missing_rate_stats)
+
+# from scipy.stats import spearmanr
+# correlation, p_value = spearmanr(missing_rate_by_time.index, missing_rate_by_time.values)
+# print("Correlation coefficient:", correlation)
+# print("p-value:", p_value)
+
+# from scipy.stats import kruskal
+# statistic, p_value = kruskal(missing_rate_by_time)
+# print("Kruskal-Wallis Test Results:")
+# print("Test Statistic:", statistic)
+# print("p-value:", p_value)

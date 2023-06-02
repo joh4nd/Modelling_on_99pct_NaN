@@ -1,4 +1,5 @@
 # wrangling rebels
+# the first part of the for loop must be used on the test data because it joins NEA leaks using inferred ship numbers, not shipIds from truth data (which are not accessible for testing the model)
 
 import glob 
 import re
@@ -116,7 +117,7 @@ for sample_no in sample_set:
     dfs.append(rebs_df)
 
 dfs = pd.concat(dfs).reset_index().drop('index', axis=1)
-dfs
+dfs.info()
 
 #region: inspect and compare samples
 print('###### df info: ######\n'), print(dfs.info())
