@@ -1,115 +1,10 @@
 # inspect leak rates
 # What type of leaks are most common?
 # Are public message leak rates independent of time/position?
+from wrangling_rebels_v2 import wr_2
 
-import glob 
-import re
-import pandas as pd
-import numpy as np
-import networkx as nx
-import bin.rebel_decode as rd
+dfs = wr_2()
 
-files = glob.glob("../data/*.txt") # list all files, some for rebel_decode
-sample_set = sorted({re.search(r"(\d{2})_", filetype).group(1).zfill(4) for filetype in files if re.search(r"(\d{2})_", filetype)}) # make time-series iterator
-print('Number of time-series: ', len(sample_set))
-dfs = [] # list of df's for concatenation at loop end
-
-for sample_no in sample_set:
-    
-    print(f"Processing sample: {sample_no}")
-
-    # extract pandas objects
-    p_info = rd.parse_public_data(f"../data/{sample_no}_public.txt")
-    truth = rd.parse_truth_data(f"../data/{sample_no}_truth.txt")
-        
-    # estimate ships from COT and rebs_df
-    rebs_df=p_info.get_rebs_df()
-    COT=p_info.get_cot() # df of messenger's cotraveller at t
-    relations = nx.from_pandas_edgelist(COT, source='messenger', target='cotraveller')
-    ships = {rebel: shipnumber for shipnumber, ship in enumerate(nx.connected_components(relations), start=1) for rebel in ship}
-    rebs_df['ship'] = rebs_df['messenger'].map(ships).astype(float) #.astype(pd.Int16Dtype())
-    rebs_df['ship_missing'] = rebs_df['ship'].isna().astype(int) # use to check missingness independence of t/xyz; NOT for prediction, because it produces biased estimates
-    print("\n How many rebels' ships do we fail to identify?\n", int(rebs_df['ship'].isna().sum()/1000)) # t=1000
-    rebs_df['ship_sample'] = rebs_df.apply(lambda df_x: np.nan if pd.isna(df_x['ship']) else str(df_x['ship'])+'_'+str(df_x['sample']),axis=1) # make ships unique across samples to imply/convey no cross-sample information
-
-    ###########################################
-    ########### wrangling_rebels_v2 ###########
-    ###########################################
-    
-    # get TRUTH to prepare multiple imputation
-
-    ## messages (LOC,NEA,COT leaks in one df)
-    messages = truth.get_messages()
-    rebel_id = messages[['id','name','shipid']].drop_duplicates(subset=['id','name','shipid']).sort_values(by='name')
-    rebs_df = rebs_df.merge(rebel_id, how='left', left_on='messenger', right_on='name').drop(labels='name', axis=1)
-
-    if rebs_df['shipid'].isna().sum() > 0:
-        print('\nrebels lacking shipid: {}\n'.format(rebs_df['shipid'].isna().sum()))
-
-    ## ship movements
-    ship_movements = truth.get_moves()
-    ship_movements.columns=['t', 'x_truth', 'y_truth', 'z_truth','shipid','at_dest']
-    ship_movements['at_dest'] = ship_movements['at_dest'].map({'true': True, 'false': False})
-    rebs_df = rebs_df.merge(ship_movements, how='left', on=['t','shipid'], suffixes=('', '__y'))
-    rebs_df.drop(rebs_df.filter(regex='^.*(__y)').columns, axis=1, inplace=True)
-
-
-    # get NEA of leaker and impute to ship members USING TRUTH ID
-    NEA=p_info.get_nea() # df of messenger's closest star
-    NEA = NEA.merge(rebel_id, how='left', left_on='messenger', right_on='name').drop(labels=['id','name'], axis=1)
-
-    if NEA['shipid'].isna().sum() < 1:
-        rebs_df = pd.merge(rebs_df,NEA[['t','shipid','closestStar']], how='left', on=['shipid','t'], suffixes=('', '__y'))
-
-        if rebs_df.duplicated().astype(int).sum() > 0:
-            print('Duplicates after join NEA: '), print(rebs_df.duplicated().astype(int).sum())
-
-            rebs_df.drop_duplicates(inplace=True)
-
-    else:
-        print('\n\nNEA leakers with unidentified ships: {}\n'.format(NEA['shipid'].isna().sum()))
-
-        rebs_df = pd.merge(rebs_df,NEA[['messenger','t','closestStar']], how='left',on=['messenger','t'], suffixes=('', '__y'))
-
-        print('\nclosest stars first time: {}'.format(rebs_df['closestStar'].notna().sum()))
-
-        NEA2 = NEA.loc[NEA['shipid'].notna()]
-        
-        if NEA2[['shipid','t','closestStar']].duplicated().sum() > 0:
-            
-            print('\nshipmembers duplicate NEA leaks: {}'.format(NEA2[['shipid','t','closestStar']].duplicated().sum()))
-            NEA2 = NEA2[['shipid','t','closestStar']].drop_duplicates().sort_values(by=['shipid','t'])
-
-        rebs_df = rebs_df.combine_first(rebs_df.drop('closestStar',axis=1).merge(NEA2, how='left',on=['shipid','t']))
-        
-        print('closest stars second time: {}\n'.format(rebs_df['closestStar'].notna().sum()))
-
-    # get TRUTH - continued
-    ## star coordinates
-    star_coords = truth.get_stars()
-    star_coords.columns=['closestStar_x', 'closestStar_y', 'closestStar_z', 'closestStar_nNeigh','starid']
-    rebs_df = rebs_df.merge(star_coords, how='left', left_on='closestStar', right_on='starid').drop(labels='starid', axis=1)
-
-    # get LOC of leaker and impute to ship members
-    LOC=p_info.get_loc() # df of messenger's location
-    rebs_df = pd.merge(rebs_df,LOC[['t','messenger','x','y','z']], how='left',on=['messenger','t'], suffixes=('', '__y'))
-    
-    # removed attempts to manually impute LOC to shipmembers
-    # because members at t leaked slightly different positions
-    # and there is no accurate way to decide what to impute
-
-    rebs_df.drop(rebs_df.filter(regex='^.*(__x|__y)').columns, axis=1, inplace=True)
-
-
-    # last touch on df cols
-    rebs_df.drop(labels='msg_content', axis=1, inplace=True) # OBS ship_missing?
-    rebs_df.rename(columns={'ID': 'messengerId', 'sample': 'sampleNo', 'ship': 'shipNo', 'ship_sample': 'shipId','closestStar':'closestStarId','id': 'messengerId_truth', 'shipid': 'shipId_truth','at_dest':'atDest_moving'},inplace=True)
-    rebs_df = rebs_df[['sampleNo','messengerId','messengerId_truth','shipId','shipId_truth','messenger','t','msg_type','closestStarId','closestStar_x','closestStar_y','closestStar_z','closestStar_nNeigh','x','y','z','x_truth','y_truth','z_truth','atDest_moving']]
-    
-    dfs.append(rebs_df)
-
-dfs = pd.concat(dfs).reset_index().drop('index', axis=1)
-dfs
 #region: inspect and compare samples
 # What type of leaks are most common?
 print('###### df info: ######\n'), print(dfs.info())
@@ -164,7 +59,6 @@ units across samples (e.g. John in sample 1 is John in sample 2).
 """
 #endregion
 
-
 #region: leak rate independence of time/position (outcomes xyz)
 
 """ background on leaks and missingness
@@ -187,16 +81,18 @@ If not, can you determine the analytical function that govern the rates?
 
 - We have seen that leak types (COT LOC NEA) are not equally frequent. This could be due to some underlying factor, such as position or time. This suggests that the leaks' possible independence of time/position may vary across leak types.
 
-Determiming an analytical function of missingness/leaks also requires conditioning on time-space. In fact, we do not want to predict missingness, because predicting it 
+- Determining an analytical function of missingness/leaks also requires conditioning on time-space. A problem with predicting missingness is that the predicted point estimates do not reflect the true variation/uncertainty of the real data. As a consequence, the actual model estimating true positions will be overconfident.
 
 """
 
-""" missingness?
-_We said rebel movements are not completely random. Is this true?_
+""" missingness
+
+We said rebel movements are not completely random. Is this true?
 
 A rebel movement may be defined as a difference in 3 dimensional space from one time to the next. The 3d visualizations strongly indicates that rebel movements are not completely random, but random in the sense that they are dependent on time and space: Positions are strongly correlated conditioned on ship, time, and space. In other words, the these variables are strongly predictive of where the ship may be: Ships move only so far from one time to the next. Conversely, being completely random would imply that values are equally probably. We can plot the value frequency distributions of the positions to get a sense of that, which I believe is unlikely.
 
 If rebel movements were completely random, we would not care to try to predict it (how could we?). We would also not care about missing values, since missing and non missing values would be equally good at predicting movements. However, if we lacked observations to power the methods, then we could impute values, to gain more confidence.
+
 """
 
 # from scipy.stats import skew, kurtosis
@@ -216,22 +112,17 @@ If rebel movements were completely random, we would not care to try to predict i
 ##kurt_by_draw = missing_rate_by_draw.groupby('sample_number').apply(kurtosis)
 
 
-
 # from scipy.stats import spearmanr
 # correlation, p_value = spearmanr(missing_rate_by_time.index, missing_rate_by_time.values)
-# print("Correlation coefficient:", correlation)
-# print("p-value:", p_value)
+# print("spearmans r:", correlation), print("p-value:", p_value)
 
 # from scipy.stats import kruskal
 # statistic, p_value = kruskal(missing_rate_by_time)
-# print("Kruskal-Wallis Test Results:")
-# print("Test Statistic:", statistic)
-# print("p-value:", p_value)
+# print("Kruskal-Wallis Test: ", statistic), print("p-value: ", p_value)
 
 # import statsmodels.api as sm
 # dfs['leak'] = dfs['msg_type'].notna()
 # manova_results = sm.multivariate.MANOVA.from_formula('t + x + y + z ~ leak', data=dfs).fit()
-# print("MANOVA Results:")
 # print(manova_results.summary())
 
 

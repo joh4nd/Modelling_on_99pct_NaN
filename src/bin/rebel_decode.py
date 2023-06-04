@@ -1,6 +1,7 @@
 import re
 import pandas as pd
 import logging
+import random
 
 FORMAT = "[%(filename)s: - %(funcName)20s() ] %(message)s"
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -203,11 +204,17 @@ def parse_public_data(path="../data/0001_public.txt"):
                 .drop('messenger', axis=1).reset_index()
 
     ## add sample number and unique rebel ID
-    match = re.search(r"/(\d{4})[^/]*\.txt$", path)
-    sample_no = int(match.group(1))
-    rebs_df['sample'] = '{:04d}'.format(sample_no)
-    rebs_df['ID'] = rebs_df['messenger'] + '_{:04d}'.format(sample_no) # unique across samples
+    if re.search(r"/(\d{4})[^/]*\.txt$", path) is not None:
+        
+        match = re.search(r"/(\d{4})[^/]*\.txt$", path)
+        sample_no = int(match.group(1))
+        rebs_df['sampleNo'] = '_{:04d}'.format(sample_no)
+        rebs_df['messengerId'] = rebs_df['messenger'] + rebs_df['sampleNo']
 
+    else:
+
+        rebs_df['sampleNo'] = '_' + str(random.randint(11, 9999)).zfill(4)
+        rebs_df['messengerId'] = rebs_df['messenger'] + rebs_df['sample']
 
     logging.info(" ... Done parsing public!")
     logging.debug('Found %d rebels!' % len(dict_rebs))
