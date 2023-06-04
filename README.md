@@ -1,11 +1,6 @@
 ## Content
 
-This repository contains my solution for a task called Rebel Rescue. The repo is [organized](https://swcarpentry.github.io/good-enough-practices-in-scientific-computing/) into
-- bin
-- src (including bin/ with decoder)
-- data
-- docs (task.md in here)
-- results
+This repository contains my solution for a task called Rebel Rescue. The repo is organized using [good enough practicies in scientific computing](https://swcarpentry.github.io/good-enough-practices-in-scientific-computing/). 
 
 ## Installation
 
