@@ -3,3 +3,5 @@ numpy==1.24.3
 plotly-express==0.4.1
 networkx==3.1
 scipy==1.10.1
+# rpy2==3.4.2 # prior june 4th
+rpy2==3.5.12 # from june 4th

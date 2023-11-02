@@ -366,7 +366,7 @@ def grade_assignment(path_truth="../data/0001_truth.txt", path_answer="../data/s
         logging.debug('%f %f %f' % (real_x, real_y, real_z))
 
         xyz = np.column_stack([real_x, real_y, real_z])
-        z = multivariate_normal.pdf(xyz, mean=mu, cov=covariance)
+        z = multivariate_normal.pdf(xyz, mean=mu, cov=covariance) # beregner en mlvn pdf af virkelige xyz med model predicted mean og covarians
         logging.debug(z)
         z = 1000*z  # little fudge factor...
 
