@@ -3,9 +3,9 @@
 pacman::p_load("Amelia", "dplyr")
 
 ########## load data ##########
-data <- read.csv("./repos/opg_RR/data/dfs_MI.csv") %>% as_tibble()
+data <- read.csv("./repos/opg_RR/data/dfs_MI.csv") %>% as_tibble() # https://jtr13.github.io/cc21fall1/tibble-vs.-dataframe.html
 View(data)
-summary(data)
+summary(data) # NAs
 
 # handle missing values 
 # library(tidyr)

@@ -1,10 +1,10 @@
 # describe dfs
 
-from wrangling_rebels_v2 import wr_2
+from wrangling_rebels_v3 import wr
 import pandas as pd
 
 # load data
-dfs = wr_2()
+dfs = wr()
 
 # describe dataset
 dfs

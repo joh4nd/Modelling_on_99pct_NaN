@@ -1,6 +1,6 @@
 # multiple imputation
 
-from wrangling_rebels_v2 import wr_2
+from wrangling_rebels_v3 import wr
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
@@ -10,7 +10,7 @@ from sklearn.preprocessing import LabelEncoder
 # from rpy2.robjects import pandas2ri 
 
 # load data
-dfs = wr_2() # to understand dfs read describe_dfs.py
+dfs = wr() # to understand dfs read describe_dfs.py
 dfs_MI = dfs.loc[:, ~dfs.columns.isin(['messengerId_truth','shipNo','messenger'])].copy() # deselect variables expected not to be useful by MI in presence of similar variables with more unique values better preventing falsely calculated identities.
 # df[df.columns[~df.columns.isin(['b'])]]
 
