@@ -44,7 +44,7 @@ ship_movements['nearestStar_z'] = star_coords.loc[nearest_star_indices, 'nearest
 
 # calculate number of nearby stars based on fixed radius
 
-##region: check assumptions for choosing Euclidian, Manhattan, or Mahalanobis distances
+##region: assumptions for choosing Euclidian, Manhattan, or Mahalanobis distances
 ### scale
 same_scale = all(star_coords['nearestStar_x'].between(0, 1000)) and \
              all(star_coords['nearestStar_y'].between(0, 1000)) and \
@@ -53,7 +53,7 @@ print("Is the data on the same scale (0-1000)?", same_scale) # TRUE
 ### variance
 data_variance = star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']].var()
 isotropic = (data_variance.max() - data_variance.min()) < 0.1
-print("Is the data isotropic?", isotropic) # FALSE
+print("Is the data isotropic?", isotropic) # FALSE ... poor test criterion?
 ### correlations
 correlation_matrix = star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']].corr()
 plt.figure(figsize=(8, 6))
@@ -74,18 +74,25 @@ plt.figure(figsize=(8, 6))
 sns.pairplot(data=star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']], diag_kind="kde")
 plt.suptitle("Pairwise Distributions")
 plt.show()
+
+# choose Euclidian
+
 ##endregion
 
-
 ## calculate distance
-neighbor_stars = NearestNeighbors(radius=45.0) # defaults to Euclidian norm
+neighbor_stars = NearestNeighbors(radius=50) # radius 50 ~ ½% of 3d space. NN defaults to Euclidian: metric=’minkowski’, norm p=2
 neighbor_stars.fit(star_coordinates)
-all_neighbors = neighbor_stars.radius_neighbors(star_coordinates, return_distance=False) # find neighbors for each star
-all_neighbors = [np.array(neighbors) for neighbors in all_neighbors] # to np array
-num_neighbors = [len(neighbors) for neighbors in all_neighbors] # Calculate the number of neighbors for each star
-# Add the number of neighbors to the star DataFrame
+all_neighbors = neighbor_stars.radius_neighbors(star_coordinates, return_distance=False) # list neighbor stars of each star
+all_neighbors = [np.array(neighbors) for neighbors in all_neighbors] # convert to np array
+num_neighbors = [len(neighbors) -1 for neighbors in all_neighbors] # calculate the number of neighbors per star, not counting stars as their own neighbors
+
+## add the number of neighbors to the star DataFrame
 star_coords['nNeigh_truth'] = num_neighbors
 star_coords[['nNeigh_truth','nNeigh']]
+correlation = star_coords['nNeigh'].corr(star_coords['nNeigh_truth']) # correlation between predicted and given nNeigh
+print(f"Correlation between nNeigh and Predicted_nNeigh: {correlation:.2f}")
+
+## add NN to ships
 ship_movements['nNeigh_truth'] = star_coords.loc[nearest_star_indices, 'nNeigh_truth'].values
 
 

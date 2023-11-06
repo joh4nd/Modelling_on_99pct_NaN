@@ -77,7 +77,7 @@ Conversely, being completely random would imply that all values are equally prob
 #endregion
 
 
-from wrangling_rebels_v2 import wr_2
+from wrangling_rebels import wr
 from scipy.stats import skew, kurtosis
 import matplotlib.pyplot as plt
 from bin import rebel_decode as rd
@@ -87,7 +87,7 @@ import re
 import pandas as pd
 
 # load data
-dfs = wr_2()
+dfs = wr()
 
 ############# inspect leaks, msg_types and compare samples #############
 #region 

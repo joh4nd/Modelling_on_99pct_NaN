@@ -49,9 +49,9 @@ def wr(directory_to_files="../data/*.txt"):
 
         print("\n How many rebels' ships do we fail to identify?\n", int(rebs_df['ship'].isna().sum()/1000)) # t=1000
         
-        rebs_df['shipId'] = rebs_df.apply(lambda df_x: np.nan if pd.isna(df_x['ship']) else str(int(df_x['ship']))+df_x['sampleNo'],axis=1) # use sample identifer from df I added to rebel_decode to ensure each ship has a unique ID. Makes ships unique across samples to imply/convey no cross-sample information. FIXME: Pandas 2.0 allows int to handle NaN. see perhaps pd.na
+        rebs_df['shipId'] = rebs_df.apply(lambda df_x: np.nan if pd.isna(df_x['ship']) else str(int(df_x['ship']))+df_x['sampleNo'],axis=1) # use sample identifer from df I added to rebel_decode to ensure each ship has a unique ID. Makes ships unique across samples to imply no cross-sample information. FIXME: Pandas 2.0 allows int to handle NaN. see perhaps pd.na
         
-        # get TRUTH necessary for multiple imputation
+        #region: get TRUTH necessary for multiple imputation
 
         ## messages (LOC,NEA,COT leaks in one df)
         messages = truth.get_messages()
@@ -102,41 +102,37 @@ def wr(directory_to_files="../data/*.txt"):
         ## star coordinates
         star_coords = truth.get_stars()
         star_coords.columns=['nearestStar_x', 'nearestStar_y', 'nearestStar_z', 'nearestStar_nNeigh','starid']
-        rebs_df = rebs_df.merge(star_coords, how='left', left_on='nearestStar', right_on='starid').drop(labels='starid', axis=1)
-
-        ###########################################
-        ########### wrangling_rebels_v3 ###########
-        ###########################################
+        rebs_df = rebs_df.merge(star_coords, how='left', left_on='nearestStar', right_on='starid').drop(labels='starid', axis=1) # append only to leaks
 
         ## calculate true nearest star (fill leaked nearest star or substitute during MI)
         ship_coordinates = ship_movements[['x_truth', 'y_truth', 'z_truth']].values
         star_coordinates = star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']].values
         distance_matrix = np.linalg.norm(ship_coordinates[:, np.newaxis] - star_coordinates, axis=2) # Euclidian distances between N stars x M ship locations
         ship_moves_nearest_star = np.argmin(distance_matrix, axis=1) # index of nearest star for each ship movement e.g. ship movement 0; star 155
-        ship_movements['nearestStar_truth'] = star_coords.loc[ship_moves_nearest_star, 'starid'].values # nearest star for each ship movement
-        ship_movements['nearestStar_truth_x'] = star_coords.loc[ship_moves_nearest_star, 'nearestStar_x'].values # nearest star for each ship movement
-        ship_movements['nearestStar_truth_y'] = star_coords.loc[ship_moves_nearest_star, 'nearestStar_y'].values # nearest star for each ship movement
-        ship_movements['nearestStar_truth_z'] = star_coords.loc[ship_moves_nearest_star, 'nearestStar_z'].values # nearest star for each ship movement
+        ship_movements[['nearestStar_truth','nearestStar_truth_x','nearestStar_truth_y','nearestStar_truth_z']] = star_coords.loc[ship_moves_nearest_star, ['starid','nearestStar_x','nearestStar_y','nearestStar_z']].values # nearest star and coordinates for each ship
 
         ## calculate true nearest neighbors of nearest star
-        neighbor_stars = NearestNeighbors(radius=15.0) # neighbors within radius 15
+        neighbor_stars = NearestNeighbors(radius=50) # neighbors within radius ~½% of 3d space
         neighbor_stars.fit(star_coordinates)
-        all_neighbors = neighbor_stars.radius_neighbors(star_coordinates, return_distance=False) # list neighbors for each star
+        all_neighbors = neighbor_stars.radius_neighbors(star_coordinates, return_distance=False) # list neighbors of each star
         all_neighbors = [np.array(neighbors) for neighbors in all_neighbors] # to array
-        num_neighbors = [len(neighbors) for neighbors in all_neighbors] # Calculate the number of neighbors for each star
+        num_neighbors = [len(neighbors) -1 for neighbors in all_neighbors] # Calculate the number of neighbors for each star, not counting each star as its own neighbor
         star_coords['nNeigh_truth'] = num_neighbors
+        nNeigh_corr = star_coords['nearestStar_nNeigh'].corr(star_coords['nNeigh_truth']) # correlation between predicted and given nNeigh
+        print(f"Correlation between given and predicted nNeigh: {nNeigh_corr:.2f}\n")
         ship_movements['nearestStar_nNeigh_truth'] = star_coords.loc[ship_moves_nearest_star, 'nNeigh_truth'].values
 
-        ## add nearst star id, position and nNeigh to df
+        ## add nearest star id, position, and nNeigh to df
         rebs_df = rebs_df.merge(ship_movements[['t','shipid','nearestStar_truth','nearestStar_truth_x', 'nearestStar_truth_y', 'nearestStar_truth_z','nearestStar_nNeigh_truth']], how='left', on=['t','shipid'], suffixes=('', '__y'))
 
+        #endregion
 
         ## get LOC of leaker and impute to ship members (may cause bias if rebels vary systematically in the noise they add to the coordinate)
         LOC=p_info.get_loc() # df of messenger's location
         rebs_df = pd.merge(rebs_df,LOC[['t','messenger','x','y','z']], how='left',on=['messenger','t'], suffixes=('', '__y'))
         
 
-        # removed attempts to manually impute LOC to shipmembers because members at t leaked slightly different positions (cf. noisy leaks) and there is no accurate way to decide what to impute. edit: perhaps the accurate way is one accounting for the noise in leaks, hence consider calculate noise (variance, st. err.) in leak locations, use estimated noise with calculated true positions to complete leak positions?
+        # don't manually impute LOC to shipmembers because members at t leak slightly different positions (cf. noisy leaks). Multiple imputation most accurately decide the values.
 
         rebs_df.drop(rebs_df.filter(regex='^.*(__x|__y)').columns, axis=1, inplace=True)
 

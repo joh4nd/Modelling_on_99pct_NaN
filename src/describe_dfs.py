@@ -1,6 +1,6 @@
 # describe dfs
 
-from wrangling_rebels_v3 import wr
+from wrangling_rebels import wr
 import pandas as pd
 
 # load data

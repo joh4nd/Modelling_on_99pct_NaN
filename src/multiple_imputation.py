@@ -1,9 +1,9 @@
 # multiple imputation
 
-from wrangling_rebels_v3 import wr
+from wrangling_rebels import wr
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
+import random
 
 # from rpy2.robjects.packages import importr # guidelines: https://github.com/joh4nd/amelia-rpy2
 # from rpy2.robjects import r
@@ -30,3 +30,10 @@ dfs_MI.to_csv('../data/dfs_MI.csv', index=False)
 # Amelia = importr('Amelia')
 # dir(Amelia)
 # # Amelia.
+
+
+
+# # split data into training and test
+# test_samples = random.sample(df['Sample'].unique().tolist(), 2) # draw 2 random  samples
+# train_data = df[~df['Sample'].isin(test_samples)]
+# test_data = df[df['Sample'].isin(test_samples)]
