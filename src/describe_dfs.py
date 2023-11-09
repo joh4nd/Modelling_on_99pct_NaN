@@ -38,3 +38,9 @@ dfs.messengerId_truth.unique() # RebelID_00001-35
 dfs.shipNo.unique() # 1.0-6.0 + nan; bear false impression of similarity across sampleNo
 dfs.shipId.unique() # combined with sample no e.g. 4_001
 dfs.shipId_truth.unique() # ShipID_00001-5
+
+# nearest star info
+dfs.nearestStarId.nunique()
+dfs.nearestStar_x.describe()
+dfs.nearestStar_y.describe()
+dfs.nearestStar_z.describe()

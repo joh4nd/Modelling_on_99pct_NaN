@@ -3,9 +3,11 @@
 pacman::p_load("Amelia", "dplyr")
 
 ########## load data ##########
-data <- read.csv("./repos/opg_RR/data/dfs_MI.csv") %>% as_tibble() # https://jtr13.github.io/cc21fall1/tibble-vs.-dataframe.html
-View(data)
-summary(data) # NAs
+rebels <- read.csv("./repos/opg_RR/data/dfs_MI.csv") # %>% as_tibble() # https://jtr13.github.io/cc21fall1/tibble-vs.-dataframe.html
+View(rebels)
+summary(rebels) # NAs
+
+# choose nothing as index but as nominal or ordinal
 
 # handle missing values 
 # library(tidyr)

@@ -45,13 +45,13 @@ def wr(directory_to_files="../data/*.txt"):
 
         relations = nx.from_pandas_edgelist(COT, source='messenger', target='cotraveller')
         ships = {rebel: shipnumber for shipnumber, ship in enumerate(nx.connected_components(relations), start=1) for rebel in ship}
-        rebs_df['ship'] = rebs_df['messenger'].map(ships).astype(float) #.astype(pd.Int16Dtype()). FIXME: Pandas 2.0 allows int to handle NaN 
+        rebs_df['ship'] = rebs_df['messenger'].map(ships).astype(float) #.astype(pd.Int16Dtype()). NOTE: Pandas 2.0 allows int to handle NaN 
 
         print("\n How many rebels' ships do we fail to identify?\n", int(rebs_df['ship'].isna().sum()/1000)) # t=1000
         
-        rebs_df['shipId'] = rebs_df.apply(lambda df_x: np.nan if pd.isna(df_x['ship']) else str(int(df_x['ship']))+df_x['sampleNo'],axis=1) # use sample identifer from df I added to rebel_decode to ensure each ship has a unique ID. Makes ships unique across samples to imply no cross-sample information. FIXME: Pandas 2.0 allows int to handle NaN. see perhaps pd.na
+        rebs_df['shipId'] = rebs_df.apply(lambda df_x: np.nan if pd.isna(df_x['ship']) else str(int(df_x['ship']))+df_x['sampleNo'],axis=1) # use sample identifer from df I added to rebel_decode to ensure each ship has a unique ID. Makes ships unique across samples to imply no cross-sample information. NOTE: Pandas 2.0 allows int to handle NaN. see perhaps pd.na
         
-        #region: get TRUTH necessary for multiple imputation
+        #region: get TRUTH for multiple imputation
 
         ## messages (LOC,NEA,COT leaks in one df)
         messages = truth.get_messages()
@@ -109,7 +109,7 @@ def wr(directory_to_files="../data/*.txt"):
         star_coordinates = star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']].values
         distance_matrix = np.linalg.norm(ship_coordinates[:, np.newaxis] - star_coordinates, axis=2) # Euclidian distances between N stars x M ship locations
         ship_moves_nearest_star = np.argmin(distance_matrix, axis=1) # index of nearest star for each ship movement e.g. ship movement 0; star 155
-        ship_movements[['nearestStar_truth','nearestStar_truth_x','nearestStar_truth_y','nearestStar_truth_z']] = star_coords.loc[ship_moves_nearest_star, ['starid','nearestStar_x','nearestStar_y','nearestStar_z']].values # nearest star and coordinates for each ship
+        ship_movements[['nearestStarId_truth','nearestStar_truth_x','nearestStar_truth_y','nearestStar_truth_z']] = star_coords.loc[ship_moves_nearest_star, ['starid','nearestStar_x','nearestStar_y','nearestStar_z']].values # nearest star and coordinates for each ship
 
         ## calculate true nearest neighbors of nearest star
         neighbor_stars = NearestNeighbors(radius=50) # neighbors within radius ~½% of 3d space
@@ -123,22 +123,20 @@ def wr(directory_to_files="../data/*.txt"):
         ship_movements['nearestStar_nNeigh_truth'] = star_coords.loc[ship_moves_nearest_star, 'nNeigh_truth'].values
 
         ## add nearest star id, position, and nNeigh to df
-        rebs_df = rebs_df.merge(ship_movements[['t','shipid','nearestStar_truth','nearestStar_truth_x', 'nearestStar_truth_y', 'nearestStar_truth_z','nearestStar_nNeigh_truth']], how='left', on=['t','shipid'], suffixes=('', '__y'))
+        rebs_df = rebs_df.merge(ship_movements[['t','shipid','nearestStarId_truth','nearestStar_truth_x', 'nearestStar_truth_y', 'nearestStar_truth_z','nearestStar_nNeigh_truth']], how='left', on=['t','shipid'], suffixes=('', '__y'))
 
         #endregion
 
-        ## get LOC of leaker and impute to ship members (may cause bias if rebels vary systematically in the noise they add to the coordinate)
+        # get LOC of leaker and impute to ship members (may cause bias if rebels vary systematically in the noise they add to the coordinate)
         LOC=p_info.get_loc() # df of messenger's location
         rebs_df = pd.merge(rebs_df,LOC[['t','messenger','x','y','z']], how='left',on=['messenger','t'], suffixes=('', '__y'))
-        
-
-        # don't manually impute LOC to shipmembers because members at t leak slightly different positions (cf. noisy leaks). Multiple imputation most accurately decide the values.
+        # WONTDO: manually impute LOC to shipmembers because members at t leak slightly different positions i.e. "noisy leaks". Multiple imputation most accurately derives accurate values.
 
         rebs_df.drop(rebs_df.filter(regex='^.*(__x|__y)').columns, axis=1, inplace=True)
 
         # rearrange and relabel df cols
         rebs_df.rename(columns={'ship': 'shipNo', 'nearestStar':'nearestStarId','id': 'messengerId_truth', 'shipid': 'shipId_truth','at_dest':'atDest_moving'},inplace=True)
-        rebs_df = rebs_df[['sampleNo','messengerId','messengerId_truth','shipNo','shipId','shipId_truth','messenger','t','msg_type','nearestStarId','nearestStar_x','nearestStar_y','nearestStar_z','nearestStar_nNeigh','nearestStar_truth','nearestStar_truth_x', 'nearestStar_truth_y', 'nearestStar_truth_z','nearestStar_nNeigh_truth','x','y','z','x_truth','y_truth','z_truth','atDest_moving']] # drop msg_content
+        rebs_df = rebs_df[['sampleNo','messengerId','messengerId_truth','shipNo','shipId','shipId_truth','messenger','t','msg_type','nearestStarId','nearestStar_x','nearestStar_y','nearestStar_z','nearestStar_nNeigh','nearestStarId_truth','nearestStar_truth_x', 'nearestStar_truth_y', 'nearestStar_truth_z','nearestStar_nNeigh_truth','x','y','z','x_truth','y_truth','z_truth','atDest_moving']] # drop msg_content
         
 
         dfs.append(rebs_df)

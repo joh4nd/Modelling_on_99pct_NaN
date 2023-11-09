@@ -7,6 +7,9 @@ import numpy as np
 import networkx as nx
 import bin.rebel_decode as rd
 from sklearn.neighbors import NearestNeighbors
+from scipy.stats import chi2
+from sklearn.decomposition import PCA
+from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -51,9 +54,25 @@ same_scale = all(star_coords['nearestStar_x'].between(0, 1000)) and \
              all(star_coords['nearestStar_z'].between(0, 1000))
 print("Is the data on the same scale (0-1000)?", same_scale) # TRUE
 ### variance
-data_variance = star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']].var()
-isotropic = (data_variance.max() - data_variance.min()) < 0.1
-print("Is the data isotropic?", isotropic) # FALSE ... poor test criterion?
+cov_matrix = np.cov(star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']], rowvar=False)
+off_diagonal_elements = cov_matrix[np.triu_indices_from(cov_matrix, k=1)]
+are_close_to_zero = np.abs(off_diagonal_elements) < 0.01
+n_features = cov_matrix.shape[0]
+degrees_of_freedom = n_features * (n_features - 1) // 2
+chi2_statistic = np.sum(cov_matrix[np.triu_indices(n_features, k=1)] ** 2)
+critical_value = chi2.ppf(1 - 0.05, degrees_of_freedom)
+is_isotropic = chi2_statistic < critical_value
+print(f"Is the data isotropic? :", is_isotropic) # FALSE
+### do pca account 1:1 for 3d?
+pca = PCA(n_components=3)
+pca.fit(star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']])
+explained_var_ratio = pca.explained_variance_ratio_
+from scipy.stats import kruskal
+kruskal_statistic, p_value = kruskal(*explained_var_ratio)
+print(f'Are they significantly different? Kruskals test: {kruskal_statistic}, p<0.05: {p_value < 0.05}') # not significantly different ratios
+### are coordinates spread around the center
+center_of_mass = np.mean(star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']], axis=0)
+radius_gyration = np.mean(np.linalg.norm(star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']] - center_of_mass, axis=1))
 ### correlations
 correlation_matrix = star_coords[['nearestStar_x', 'nearestStar_y', 'nearestStar_z']].corr()
 plt.figure(figsize=(8, 6))
