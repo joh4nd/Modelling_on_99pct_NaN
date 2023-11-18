@@ -1,57 +1,8 @@
-## Content
+# Content
 
-This repository contains my solution for a task called Rebel Rescue. The repo is organized using [good enough practicies in scientific computing](https://swcarpentry.github.io/good-enough-practices-in-scientific-computing/). 
+This contains my solution to a task called Rebel Rescue.
 
-## Installation
-
-```bash
-$ pip install virtualenv
-$ cd # to opg_RR/bin/
-$ virtualenv venv
-$ source # to opg_RR/bin/venv/bin/activate
-$ pip install -r requirements.txt
-```
-
-## Deploy additional python packages
-
-Write it manually in requirements.txt
-
-```bash
-$ pip install some-package-here # installing and using a python package
-$ cd # to opg_RR/bin/
-
-$ nano requirements.txt # add new lines for new packages
-
-# either substitute > or add >> requirements:
-#$ pip freeze > requirements.txt
-#$ pip freeze >> requirements.txt
-
-# or alternatively, use piprequires
-# pip install pipreqs
-# pipreqs ~/repos/opg_RR/src/
-```
-
-
-### details
-
-in the terminal, activate the virtual environment
-```bash
-$ source opg_RR/bin/venv/bin/activate
-```
-
-load tools in rebel_decode.py
- - __init__.py in src/bin/
- - configure vscode paths for directory ctrl+, 
-   - "jupyter: notebook file root" e.g. ${fileDirname}
-   - "Python › Analysis: Import Format"
-   - "Python › Terminal: Execute In File Dir"
-   - launch.json # https://stackoverflow.com/a/55072246/3755989
- - cwd is set to find # https://stackoverflow.com/a/51149057/3755989
-```python
-from pathlib import Path
-print(Path.cwd())
-
-os.listdir(os.getcwd())
-os.getcwd()
-os.chdir('path')
-```
+- The assignment is to predict position of agents in space-time given extremely scattered information about their whereabouts.
+- The most pertinent exercise hence was to wrangle the data in such as way as to enable carrying out estimations or learning models.
+- My solution involved multiple imputation (Amelia), network algorithms (networkx), and Pandas operations.
+- Because multiple imputation is involved, I became aware of the need to [help python users to implement Amelia (a package for R, not python)](../../../amelia-rpy2/): the only software for handling missing data in cross-sectional, time-series data structures.

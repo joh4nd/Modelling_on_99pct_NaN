@@ -111,6 +111,9 @@ def wrangle(sample_set=f'0001'):
     ## add nearest star id, position, and nNeigh to df
     rebs_df = rebs_df.merge(ship_movements[['t','shipid','nearestStarId_truth','nearestStar_truth_x', 'nearestStar_truth_y', 'nearestStar_truth_z','nearestStar_nNeigh_truth']], how='left', on=['t','shipid'], suffixes=('', '__y'))
 
+    # convert to float
+    rebs_df[['nearestStar_truth_x','nearestStar_truth_y','nearestStar_truth_z']] = rebs_df[['nearestStar_truth_x','nearestStar_truth_y','nearestStar_truth_z']].apply(lambda cols_x: cols_x.astype('float64'))
+
     #endregion
 
     # get LOC of leaker and impute to ship members (may cause bias if rebels vary systematically in the noise they add to the coordinate)
@@ -125,21 +128,20 @@ def wrangle(sample_set=f'0001'):
     rebs_df = rebs_df[['sampleNo','messengerId','messengerId_truth','shipNo','shipId','shipId_truth','messenger','t','msg_type','nearestStarId','nearestStar_x','nearestStar_y','nearestStar_z','nearestStar_nNeigh','nearestStarId_truth','nearestStar_truth_x', 'nearestStar_truth_y', 'nearestStar_truth_z','nearestStar_nNeigh_truth','x','y','z','x_truth','y_truth','z_truth','atDest_moving']] # drop msg_content
         
 
-
-    # load data
     # dfs = wr() # understand dfs, see: describe_dfs.py
+
+
+    # prepare to imputation
     dfs_MI = rebs_df[rebs_df.columns[~rebs_df.columns.isin(['index','messengerId_truth','shipNo','shipId','messenger','nearestStarId','nearestStar_x','nearestStar_y','nearestStar_z','nearestStar_nNeigh','msg_type'])]].copy() # deselect variables expected not to be useful by MI in presence of similar variables with more unique values better preventing falsely calculated identities. shipId, nearestStarId/x/y/z/nNeigh, msg_type are useful for ML, not MI.
     # NOTE 1) should we drop all rows being NaN in msg_type (perhaps for ML)?
-
-
+    del rebs_df
 
     # convert categorical into numeric, required by MI. Amelia understands nominal variables
     cols_to_cat = ['sampleNo','messengerId','shipId_truth','nearestStarId_truth']
-    rebs_df[cols_to_cat] = rebs_df[cols_to_cat].astype('category').apply(lambda x_col: x_col.cat.codes).replace(-1,np.nan)
-    print('cat nulls before conversion:\n\n', rebs_df[cols_to_cat].isna().sum(),'\n\n','cat nulls after conversion:\n\n',rebs_df[cols_to_cat].isna().sum(),sep="")
-    del rebs_df
+    dfs_MI[cols_to_cat] = dfs_MI[cols_to_cat].astype('category').apply(lambda x_col: x_col.cat.codes).replace(-1,np.nan)
+    print('cat nulls before conversion:\n\n', dfs_MI[cols_to_cat].isna().sum(),'\n\n','cat nulls after conversion:\n\n',dfs_MI[cols_to_cat].isna().sum(),sep="")
 
-    # save to csv for R processes (before handled through rpy2)
+    # save to csv for R processes handled through rpy2
     dfs_MI.to_csv('../data/dfs_MI.csv',index_label='index') #, index=False)
     print(dfs_MI.columns)
 

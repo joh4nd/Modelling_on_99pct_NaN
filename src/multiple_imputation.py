@@ -1,80 +1,74 @@
 # multiple imputation version 2
 
-from wrangling_rebels import wr
-import pandas as pd
-import numpy as np
+## setup rpy2
+# import rpy2
+# print(rpy2.situation)
+# base = importr('base')
+# print(base._libPaths())
+# print(base._Library)
+# print(base._Library_site)
+# robjects.r.getwd()
 
+# setup R in python
+# import rpy2.robjects as ro # for writing embedded R code
+# from rpy2.robjects import pandas2ri as p2r
+# from rpy2.robjects import r
 
-# setup Amelia in python
-from rpy2.robjects.packages import importr # guidelines: https://github.com/joh4nd/amelia-rpy2
-from rpy2.robjects import r
-from rpy2.robjects import pandas2ri 
-
-# https://rpy2.github.io/doc/latest/html/pandas.html
-# # run R instance to use Amelia
-# rutils = importr('utils')
-# rhelp_where = rutils.help_search('help')
-
-# Amelia = importr('Amelia')
+# setup Amelia
+# from rpy2.robjects.packages import isinstalled
+# packnames = ('Amelia', 'dplyr')
+from rpy2.robjects.vectors import StrVector
+# names_to_install = [x for x in packnames if not isinstalled(x)]
+from rpy2.robjects.packages import importr # packs to python objects
+Amelia = importr('Amelia')
 # dir(Amelia)
-# # Amelia.
-    
 
-def impute(imputation_method="Amelia", df=df):
+# utils = importr('utils')
+# utils.chooseCRANmirror(ind=1) # select the first mirror in the list for R packages
+# if len(names_to_install) > 0:
+#     utils.install_packages(StrVector(names_to_install))
 
-    r_dataframe = pandas2ri.py2ri(preprocessed_df)
 
-    r_script = """
-    
-    pacman::p_load("Amelia", "dplyr")
+# load data
+import data_pipeline as dp
+import numpy as np
+dfs_MI = dp.runner(m=1)
 
-    # convert Pandas dataframe to R dataframe through rpy2
-    rebels <- read.csv("./repos/opg_RR/data/dfs_MI.csv")
+# # inspect conversion
+# p2r.activate()
+# rdf = p2r.py2rpy(dfs_MI) # index is also converted, hence one col less
+# r.head(rdf)
+# list(enumerate(r.colnames(rdf))) # 9-11 + 1 because R starts at 1, not 0 like python
 
-    # run
-    MI <- amelia(x = rebels1,
-        m = 5,
-        p2s = 1,
-        idvars = c("index","sampleNo"),
-        noms = c("messengerId","nearestStarId_truth"),
-        ords = "atDest_moving",
-        ts = "t",
-        cs = "shipId_truth",
-        empri = 0.05 * nrow(rebels1),
-        polytime = 2,
-        intercs = TRUE,
-        bounds = matrix(c(11,0,1000, 12,0,1000, 13,0,1000), nrow = 3, ncol = 3, byrow = TRUE),
-        parallel = 'multicore',
-        ncpus = 8) 
+imputed = Amelia.amelia(x = dfs_MI,
+              m = 1,
+              p2s = 1,
+              idvars = StrVector(['row.names','sampleNo']), # StrVector(['index', 'sampleNo']) # rownames = 'index'
+              noms = StrVector(["messengerId","nearestStarId_truth"]),
+              ords = "atDest_moving",
+              ts = "t",
+              cs = "shipId_truth",
+              empri = 0.05 * len(dfs_MI),
+              polytime = 3,
+              splinetime = 9,
+              intercs = True,
+              bounds = np.array([[10, 0, 1000], [11, 0, 1000], [12, 0, 1000]]),
+              parallel = 'multicore',
+              ncpus = 8)
+
+
+
+"""
+def impute(df=dfs_MI, m=1, parallel='multicore', ncpus=8):
 
     # diagnostics
 
     # simulation to draw samples of m imputated datasets, to be combined in one final dataset
     # NOTE this may alternatively be done using numpy random functions
-    
-
-    """
-    
-    imputed_data = robjects.r(r_script)
-
-    imputed_df = pandas2ri.ri2py_dataframe(imputed_data)
 
     return imputed_data
-
-
-
-
-
-
-
-
+"""
 
 
 # concatenate
-
-# # split data into training and test
-# test_samples = random.sample(df['Sample'].unique().tolist(), 2) # draw 2 random  samples
-# train_data = df[~df['Sample'].isin(test_samples)]
-# test_data = df[df['Sample'].isin(test_samples)]
-
 
